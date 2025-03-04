@@ -156,7 +156,6 @@ pub fn read_articles_file(path) {
   let parse_result = read_xml(path)
   case parse_result {
     Error(file_err) -> {
-      io.println_error("oops!")
       Error(FileError(file_err))
     }
     Ok(input) -> parse_site(input)
