@@ -1,20 +1,21 @@
+import server/server
 import argv
-import birl
 import gleam/io
 import gleam/list
-import gleam/option.{None, Some}
-import gleam/order
 import gleam/string
-import rss/parser.{type Article}
+import rss/parser
 import simplifile
+import article
 
 pub fn main() {
   case argv.load().arguments {
-    ["-f", path, ..] -> run_local_file(path)
+    ["-f", path, ..]|["file", path, ..] -> run_local_file(path)
+    ["server", ..] -> server.run_server()
 
     _ -> {
       io.println("usage:")
-      io.println("\tshow feed from local file: rss -f file.rss")
+      io.println("\tshow feed from local file: rss file file.rss")
+      io.println("\trun http service: rss server")
       // io.println("\trss -f file.rss") 
     }
   }
@@ -45,34 +46,19 @@ fn run_local_file(path) {
       }
     }
     Ok(articles) -> {
-      let articles = list.sort(articles, article_compare)
+      let articles = list.sort(articles, article.compare)
 
-      use article <- list.each(articles)
+      use art <- list.each(articles)
       io.println(
         "Article: "
-        <> article.title
+        <> art.title
         <> " - "
-        <> article_date_str(article)
+        <> article.to_date_str(art)
         <> " - "
-        <> article.link,
+        <> art.link,
       )
       io.println("")
     }
   }
 }
 
-fn article_compare(article1: Article, article2: Article) {
-  case article1.date, article2.date {
-    Some(d1), Some(d2) -> birl.compare(d1, d2)
-    Some(_), None -> order.Gt
-    None, Some(_) -> order.Lt
-    None, None -> order.Gt
-  }
-}
-
-fn article_date_str(article: Article) -> String {
-  case article.date {
-    None -> "at some time"
-    Some(d) -> birl.to_naive(d)
-  }
-}

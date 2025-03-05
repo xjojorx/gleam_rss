@@ -1,25 +1,12 @@
 import birl
 import gleam/io
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option
 import gleam/result
 import gleam/string
 import simplifile
 import xmlm.{type Input, type Tag, Data, ElementEnd, ElementStart, Name, Tag}
-
-pub type Article {
-  Article(
-    title: String,
-    link: String,
-    date: Option(birl.Time),
-    categories: List(String),
-    description: String,
-  )
-}
-
-//TODO: make it a record with the feed's own information
-pub type Feed =
-  List(Article)
+import article.{type Feed, type Article, Article}
 
 pub type ParseError {
   FileError(simplifile.FileError)
@@ -107,7 +94,6 @@ fn do_parse_article(
         Ok(#(SimpleElement("pubDate", content), input)) -> {
           let date =
             content
-            |> io.debug
             |> birl.parse
             |> result.lazy_or(fn() { birl.from_http(content) })
             |> option.from_result
