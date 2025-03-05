@@ -1,8 +1,11 @@
 import argv
+import birl
 import gleam/io
 import gleam/list
+import gleam/option.{None, Some}
+import gleam/order
 import gleam/string
-import rss/parser
+import rss/parser.{type Article}
 import simplifile
 
 pub fn main() {
@@ -42,9 +45,27 @@ fn run_local_file(path) {
       }
     }
     Ok(articles) -> {
+      let articles = list.sort(articles, article_compare)
+
       use article <- list.each(articles)
-      io.println("Article: " <> article.title <> " - " <> article.link)
+      io.println("Article: " <> article.title <> " - " <> article_date_str(article) <> " - "<> article.link)
       io.println("")
     }
+  }
+}
+
+fn article_compare(article1: Article, article2: Article) {
+  case article1.date, article2.date {
+    Some(d1), Some(d2) -> birl.compare(d1, d2)
+    Some(_), None -> order.Gt
+    None, Some(_) -> order.Lt
+    None, None -> order.Gt
+  }
+}
+
+fn article_date_str(article: Article) -> String {
+  case article.date{
+    None -> "at some time"
+    Some(d) -> birl.to_naive(d)
   }
 }

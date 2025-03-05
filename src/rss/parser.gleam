@@ -1,5 +1,7 @@
+import birl
 import gleam/io
 import gleam/list
+import gleam/option.{type Option}
 import gleam/result
 import gleam/string
 import simplifile
@@ -9,7 +11,7 @@ pub type Article {
   Article(
     title: String,
     link: String,
-    date: String,
+    date: Option(birl.Time),
     categories: List(String),
     description: String,
   )
@@ -86,7 +88,7 @@ fn parse_items(input: Input, articles: List(Article)) {
 
 //read started <item> until </item>
 fn parse_article(input: Input) {
-  do_parse_article(input, Article("", "", "", [], ""))
+  do_parse_article(input, Article("", "", option.None, [], ""))
 }
 
 fn do_parse_article(
@@ -102,8 +104,15 @@ fn do_parse_article(
           do_parse_article(input, Article(..article, title: content))
         Ok(#(SimpleElement("link", content), input)) ->
           do_parse_article(input, Article(..article, link: content))
-        Ok(#(SimpleElement("pubDate", content), input)) ->
-          do_parse_article(input, Article(..article, date: content))
+        Ok(#(SimpleElement("pubDate", content), input)) -> {
+          let date =
+            content
+            |> io.debug
+            |> birl.parse
+            |> result.lazy_or(fn() { birl.from_http(content) })
+            |> option.from_result
+          do_parse_article(input, Article(..article, date: date))
+        }
         Ok(#(SimpleElement("description", content), input)) ->
           do_parse_article(input, Article(..article, description: content))
         //TODO: handle cdata description?
