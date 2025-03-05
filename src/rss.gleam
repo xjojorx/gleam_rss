@@ -48,7 +48,14 @@ fn run_local_file(path) {
       let articles = list.sort(articles, article_compare)
 
       use article <- list.each(articles)
-      io.println("Article: " <> article.title <> " - " <> article_date_str(article) <> " - "<> article.link)
+      io.println(
+        "Article: "
+        <> article.title
+        <> " - "
+        <> article_date_str(article)
+        <> " - "
+        <> article.link,
+      )
       io.println("")
     }
   }
@@ -64,7 +71,7 @@ fn article_compare(article1: Article, article2: Article) {
 }
 
 fn article_date_str(article: Article) -> String {
-  case article.date{
+  case article.date {
     None -> "at some time"
     Some(d) -> birl.to_naive(d)
   }
